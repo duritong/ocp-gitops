@@ -36,7 +36,7 @@ fi
 
 echo "Bootstrapping gitops..."
 
-echo "Creating openshift-gitops namespace to bootstrap secrets..."
+echo "Creating openshift-gitops namespace to bootstrap cluster..."
 
 cat <<EOF | oc apply -f -
 apiVersion: v1
@@ -50,7 +50,7 @@ echo -n "Waiting for Namespace to exist."
 while ! [ "$(oc get namespace openshift-gitops -o jsonpath='{.status.phase}' 2>/dev/null)" == "Active" ]; do echo -n '.'; sleep 1; done
 echo
 
-oc kustomize bootstrap/openshift-gitops/ | oc apply -f
+oc kustomize bootstrap/openshift-gitops/ | oc apply -f -
 
 until oc get deployment -n openshift-gitops openshift-gitops-server 2>/dev/null >/dev/null; do echo -n '.'; sleep 1; done
 echo
