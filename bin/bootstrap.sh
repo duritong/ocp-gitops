@@ -27,9 +27,9 @@ if [ $? -gt 0 ]; then
   exit 1
 fi
 
-git ls-files --error-unmatch "${cwd}/cluster-config/overlays/${CLUSTER_NAME}/kustomization.yaml" 2>&1 > /dev/null
+git ls-files --error-unmatch "${cwd}/cluster-config/overlays/${CLUSTER_NAME}/apps-of-apps/kustomization.yaml" 2>&1 > /dev/null
 if [ $? -gt 0 ]; then
-  echo "We do not have a cluster overlay in cluster-config/overlays/${CLUSTER_NAME}/kustomization.yaml"
+  echo "We do not have a cluster overlay in cluster-config/overlays/${CLUSTER_NAME}/apps-of-apps/kustomization.yaml"
   echo "Ensure that you created this overlay and it is in git and pushed!"
   exit 1
 fi
@@ -50,10 +50,12 @@ echo -n "Waiting for Namespace to exist."
 while ! [ "$(oc get namespace openshift-gitops -o jsonpath='{.status.phase}' 2>/dev/null)" == "Active" ]; do echo -n '.'; sleep 1; done
 echo
 
-oc kustomize bootstrap/openshift-gitops/ | oc apply -f -
+oc kustomize "${cwd}/bootstrap/openshift-gitops/" | oc apply -f -
 
 until oc get deployment -n openshift-gitops openshift-gitops-server 2>/dev/null >/dev/null; do echo -n '.'; sleep 1; done
 echo
 oc wait --for=condition=Available -n openshift-gitops deployment/openshift-gitops-server
+
+oc kustomize "${cwd}/cluster-config/overlays/${cluster_name}/apps-of-apps/" | oc apply -f -
 
 echo "OpenShift GitOps is ready! The cluster should bootstrap itself..."

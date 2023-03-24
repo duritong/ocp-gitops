@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: as-gf-platform-app-of-apps
+  namespace: openshift-gitops
+spec:
+  generators:
+  - matrix:
+      generators:
+      - git:
+          files:
+          - path: cluster-definitions/CLUSTER_NAME/cluster.yaml
+          repoURL: https://github.com/duritong/ocp-gitops.git
+          revision: HEAD
+      - merge:
+          generators:
+          - git:
+              files:
+              - path: versions/{{ platform_version }}/version.yaml
+              repoURL: https://github.com/duritong/ocp-gitops.git
+              revision: HEAD
+          - git:
+              files:
+              - path: cluster-definitions/{{ cluster.name }}/cluster.yaml
+              repoURL: https://github.com/duritong/ocp-gitops.git
+              revision: HEAD
+          mergeKeys:
+          - version
+  syncPolicy:
+    preserveResourcesOnDeletion: true
+  template:
+    metadata:
+      name: platform-app-of-apps
+    spec:
+      destination:
+        server: https://kubernetes.default.svc
+      project: default
+      source:
+        path: cluster-config/overlays/{{ cluster.name }}/apps-of-apps
+        repoURL: https://github.com/duritong/ocp-gitops.git
+        targetRevision: "{{ version.apps_of_apps.revision }}"
+      syncPolicy:
+        automated:
+          prune: false
+          selfHeal: true
+        retry:
+          limit: 60
+          backoff:
+            duration: '10s'
+            factor: 1
+            maxDuration: '20m'

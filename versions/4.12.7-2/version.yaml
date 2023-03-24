@@ -1,0 +1,5 @@
+version:
+  ocp: 4.12.7
+  ocp_major: 4.12
+  apps_of_apps:
+    revision:

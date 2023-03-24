@@ -1,0 +1,4 @@
+kind: Kustomization
+
+resources:
+  - apps-of-apps.yaml
