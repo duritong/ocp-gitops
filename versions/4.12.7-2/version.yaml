@@ -2,4 +2,4 @@ version:
   ocp: 4.12.7
   ocp_major: 4.12
   apps_of_apps:
-    revision:
+    revision: f1d2ed89191b85f657bb1a5ce078df7e4d538713
