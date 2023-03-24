@@ -56,6 +56,6 @@ until oc get deployment -n openshift-gitops openshift-gitops-server 2>/dev/null 
 echo
 oc wait --for=condition=Available -n openshift-gitops deployment/openshift-gitops-server
 
-oc kustomize "${cwd}/cluster-config/overlays/${cluster_name}/apps-of-apps/" | oc apply -f -
+oc kustomize "${cwd}/cluster-config/overlays/${CLUSTER_NAME}/apps-of-apps/" | oc apply -f -
 
 echo "OpenShift GitOps is ready! The cluster should bootstrap itself..."
