@@ -11,8 +11,8 @@ fi
 CLUSTER_NAME=$1
 
 cwd=$(dirname $(dirname $(readlink -f $0)))
-if [ ! -f "${cwd}/cluster-definitions/${CLUSTER_NAME}/cluster.json" ]; then
-  echo "Main cluster config ${cwd}/cluster-definitions/${CLUSTER_NAME}/cluster.json does not exist!"
+if [ ! -f "${cwd}/cluster-definitions/${CLUSTER_NAME}/cluster.yaml" ]; then
+  echo "Main cluster config ${cwd}/cluster-definitions/${CLUSTER_NAME}/cluster.yaml does not exist!"
   exit 1
 fi
 if ! [ "$(oc get console cluster -o jsonpath='{.status.consoleURL}' | sed 's/.*apps\.\([^\.]*\)\..*/\1/')" == "${CLUSTER_NAME}" ]; then
@@ -20,9 +20,9 @@ if ! [ "$(oc get console cluster -o jsonpath='{.status.consoleURL}' | sed 's/.*a
   exit 1
 fi
 
-git ls-files --error-unmatch "${cwd}/cluster-definitions/${CLUSTER_NAME}/cluster.json" 2>&1 > /dev/null
+git ls-files --error-unmatch "${cwd}/cluster-definitions/${CLUSTER_NAME}/cluster.yaml" 2>&1 > /dev/null
 if [ $? -gt 0 ]; then
-  echo "We do not have a cluster-definition in cluster-definitions/${CLUSTER_NAME}/cluster.json"
+  echo "We do not have a cluster-definition in cluster-definitions/${CLUSTER_NAME}/cluster.yaml"
   echo "Ensure that you created this definition and it is in git and pushed!"
   exit 1
 fi
