@@ -1,0 +1,4 @@
+kind: Kustomization
+
+resources:
+  - as-openshift-gitops.yaml

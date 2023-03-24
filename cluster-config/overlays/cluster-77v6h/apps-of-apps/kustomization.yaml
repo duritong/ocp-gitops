@@ -2,6 +2,7 @@ kind: Kustomization
 
 resources:
   - ../../../../components/config/apps-of-apps/base/
+  - ../../../apps/base/
 
 components:
   - components/patch-applicationsets/
