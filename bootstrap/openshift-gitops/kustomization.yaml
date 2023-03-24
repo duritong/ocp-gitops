@@ -1,4 +1,4 @@
 kind: Kustomization
 
 bases:
-  - ../../components/operators/openshift-gitops/overlays/gitops-1.7
+  - ../../components/operators/openshift-gitops/overlays/gitops-1.7-enable-cluster-admin
