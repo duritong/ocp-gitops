@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -e
 
 old_version_str=$1
 new_version_str=$2
@@ -51,9 +53,9 @@ echo
 function init_bare_git() {
   local repo=$1
 
-  local git_bare="${git_base}/$(echo -n $repo | sed -e 's@^ssh://@@' -e 's@/@_@g')/bare"
-  if [[ ! "${repo}" =~ ^ssh: ]]; then
-    repo="ssh://${repo}"
+  local git_bare="${git_base}/$(echo -n $repo | sed -e 's@^https://@@' -e 's@/@_@g')/bare"
+  if [[ ! "${repo}" =~ ^https: ]]; then
+    repo="https://${repo}"
   fi
   if [ ! -f "${git_bare}/HEAD" ]; then
     git clone -q --bare "${repo}" "${git_bare}"
@@ -115,12 +117,11 @@ echo -n "Preparing generation..."
 if [[ "${old_version_str}" =~ ^4\. ]]; then
   old_version_file="${repodir}/versions/${old_version_str}/version.yaml"
 
-  bootstrap_old_revision=$(jq -r '.version.apps-of-apps.revision' < "${old_version_file}")
+  bootstrap_old_revision=$(yq -r '.version.apps_of_apps.revision' < "${old_version_file}")
   git_bootstrap_old_revision=$(init_git "${main_git_url}" "${bootstrap_old_revision}")
 
-  cp -a "${git_bootstrap_old_revision}/bin/set-version-for-cluster.sh" "${old_cluster_definition_dir}/bin/"
   cp -a "${git_bootstrap_old_revision}"/{versions,cluster-definitions} "${old_cluster_definition_dir}/"
-  "${old_cluster_definition_dir}/bin/set-version-for-cluster.sh" ${old_version} ${cluster} > /dev/null
+  yq -i ".platform_version = '${old_version}'" "${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml"
 else
   if [ "${old_version_str}" == "current" ]; then
     git_bootstrap_old_revision="${repodir}"
@@ -133,12 +134,11 @@ fi
 if [[ "${new_version_str}" =~ ^4\. ]]; then
   new_version_file="${repodir}/versions/${new_version_str}/version.yaml"
 
-  bootstrap_new_revision=$(yq -r '.version.apps-of-apps.revision' < "${new_version_file}")
+  bootstrap_new_revision=$(yq -r '.version.apps_of_apps.revision' < "${new_version_file}")
   git_bootstrap_new_revision=$(init_git "${main_git_url}" "${bootstrap_new_revision}")
 
-  cp -a "${git_bootstrap_new_revision}/bin/set-version-for-cluster.sh" "${new_cluster_definition_dir}/bin/"
   cp -a "${git_bootstrap_new_revision}"/{versions,cluster-definitions} "${new_cluster_definition_dir}/"
-  "${new_cluster_definition_dir}/bin/set-version-for-cluster.sh" ${new_version} ${cluster} > /dev/null
+  yq -i ".platform_version = '${new_version}'" "${new_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml"
 elif [ "${new_version_str}" == "skip" ]; then
   echo "Skipping preparing of new version"
 else
@@ -155,7 +155,7 @@ echo
 
 echo -n "Generating old bootstrap..."
 oc kustomize ${git_bootstrap_old_revision}/cluster-config/overlays/${cluster}/apps-of-apps | yq -r > "${old_output_dir}/bootstrap.yaml"
-for var in $(yq -o yaml < "${old_output_dir}/bootstrap.yaml" | jq '.' | grep '{{' | sed -e 's/[^{]*{{[ ]*//' -e 's/[ ]*}}[^}]*$//' -e 's/[ ]*}}[^{]*{{[ ]*/\n/g' | sort -u); do 
+for var in $(yq -o json < "${old_output_dir}/bootstrap.yaml" | jq '.' | grep '{{' | sed -e 's/[^{]*{{[ ]*//' -e 's/[ ]*}}[^}]*$//' -e 's/[ ]*}}[^{]*{{[ ]*/\n/g' | sort -u); do 
   sed -i -e "s/{{ *${var} *}}/$(jq -r .${var} < ${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml)/g" "${old_output_dir}/bootstrap.yaml"
 done
 echo " DONE"
