@@ -1,0 +1,3 @@
+- op: replace
+  path: /spec/generators/0/matrix/generators/0/git/files/0/path
+  value: cluster-definitions/cluster-94vmx/cluster.yaml
