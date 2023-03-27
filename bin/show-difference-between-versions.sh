@@ -156,15 +156,15 @@ echo
 echo -n "Generating old bootstrap..."
 oc kustomize ${git_bootstrap_old_revision}/cluster-config/overlays/${cluster}/apps-of-apps | yq -r > "${old_output_dir}/bootstrap.yaml"
 for var in $(yq -o json < "${old_output_dir}/bootstrap.yaml" | jq '.' | grep '{{' | sed -e 's/[^{]*{{[ ]*//' -e 's/[ ]*}}[^}]*$//' -e 's/[ ]*}}[^{]*{{[ ]*/\n/g' | sort -u); do 
-  sed -i -e "s/{{ *${var} *}}/$(yq -r .${var} < ${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml)/g" "${old_output_dir}/bootstrap.yaml"
+  sed -i -e "s/{{ *${var} *}}/$(yq ". *= load(\"${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml\") | .${var}" ${old_cluster_definition_dir}/versions/$(yq -r '.platform_version' "${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml")/version.yaml)/g" "${old_output_dir}/bootstrap.yaml"
 done
 echo " DONE"
 
 if [ "${new_version_str}" != "skip" ]; then
   echo -n "Generating new bootstrap..."
   oc kustomize ${git_bootstrap_new_revision}/cluster-config/overlays/${cluster}/apps-of-apps | yq -r > "${new_output_dir}/bootstrap.yaml"
-  for var in $(yq -o json < "${new_output_dir}/bootstrap.yaml" | jq '.' | grep '{{' | sed -e 's/[^{]*{{[ ]*//' -e 's/[ ]*}}[^}]*$//' -e 's/[ ]*}}[^{]*{{[ ]*/\n/g' | sort -u); do 
-    sed -i -e "s/{{ *${var} *}}/$(yq -r .${var} < ${new_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml)/g" "${new_output_dir}/bootstrap.yaml"
+  for var in $(yq -o json < "${new_output_dir}/bootstrap.yaml" | jq '.' | grep '{{' | sed -e 's/[^{]*{{[ ]*//' -e 's/[ ]*}}[^}]*$//' -e 's/[ ]*}}[^{]*{{[ ]*/\n/g' | sort -u); do
+    sed -i -e "s/{{ *${var} *}}/$(yq ". *= load(\"${new_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml\") | .${var}" ${new_cluster_definition_dir}/versions/$(yq -r '.platform_version' "${new_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml")/version.yaml)/g" "${new_output_dir}/bootstrap.yaml"
   done
   echo " DONE"
   echo
@@ -267,6 +267,8 @@ if [ "${new_version_str}" != "skip" ]; then
   echo
   echo "diff -Naur ${old_output_dir} ${new_output_dir}"
   echo
+
+  diff -Naur ${old_output_dir} ${new_output_dir} | less
 else
   echo
   echo "Generating all configs done - you can now inspect the generated config in ${old_output_dir}"
