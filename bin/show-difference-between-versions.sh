@@ -121,7 +121,7 @@ if [[ "${old_version_str}" =~ ^4\. ]]; then
   git_bootstrap_old_revision=$(init_git "${main_git_url}" "${bootstrap_old_revision}")
 
   cp -a "${git_bootstrap_old_revision}"/{versions,cluster-definitions} "${old_cluster_definition_dir}/"
-  yq -i ".platform_version = '${old_version}'" "${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml"
+  yq -i ".platform_version = \"${old_version}\"" "${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml"
 else
   if [ "${old_version_str}" == "current" ]; then
     git_bootstrap_old_revision="${repodir}"
@@ -138,7 +138,7 @@ if [[ "${new_version_str}" =~ ^4\. ]]; then
   git_bootstrap_new_revision=$(init_git "${main_git_url}" "${bootstrap_new_revision}")
 
   cp -a "${git_bootstrap_new_revision}"/{versions,cluster-definitions} "${new_cluster_definition_dir}/"
-  yq -i ".platform_version = '${new_version}'" "${new_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml"
+  yq -i ".platform_version = \"${new_version}\"" "${new_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml"
 elif [ "${new_version_str}" == "skip" ]; then
   echo "Skipping preparing of new version"
 else
@@ -156,7 +156,7 @@ echo
 echo -n "Generating old bootstrap..."
 oc kustomize ${git_bootstrap_old_revision}/cluster-config/overlays/${cluster}/apps-of-apps | yq -r > "${old_output_dir}/bootstrap.yaml"
 for var in $(yq -o json < "${old_output_dir}/bootstrap.yaml" | jq '.' | grep '{{' | sed -e 's/[^{]*{{[ ]*//' -e 's/[ ]*}}[^}]*$//' -e 's/[ ]*}}[^{]*{{[ ]*/\n/g' | sort -u); do 
-  sed -i -e "s/{{ *${var} *}}/$(jq -r .${var} < ${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml)/g" "${old_output_dir}/bootstrap.yaml"
+  sed -i -e "s/{{ *${var} *}}/$(yq -r .${var} < ${old_cluster_definition_dir}/cluster-definitions/${cluster}/cluster.yaml)/g" "${old_output_dir}/bootstrap.yaml"
 done
 echo " DONE"
 
@@ -236,11 +236,11 @@ function recurse_into_file() {
   SAVEIFS=$IFS
   IFS=$(echo -en "\n\b")
 
-  apps_helm=($(yq -o yaml < "${file}" | jq -r '. | select(.kind == "ApplicationSet" and (.spec.template.spec.source | has("helm"))) | .spec.template.metadata.name + "  " + (.spec.template.spec | @base64)'))
-  apps_helm+=($(yq -o yaml < "${file}" | jq -r '. | select(.kind == "Application" and (.spec.source | has("helm"))) | .metadata.name + "  " + (.spec | @base64)'))
+  apps_helm=($(yq -o json < "${file}" | jq -r '. | select(.kind == "ApplicationSet" and (.spec.template.spec.source | has("helm"))) | .spec.template.metadata.name + "  " + (.spec.template.spec | @base64)'))
+  apps_helm+=($(yq -o json < "${file}" | jq -r '. | select(.kind == "Application" and (.spec.source | has("helm"))) | .metadata.name + "  " + (.spec | @base64)'))
 
-  apps_kustomize=($(yq -o yaml < "${file}" | jq -r '. | select(.kind == "ApplicationSet" and (.spec.template.spec.source | has("helm") | not)) | .spec.template.metadata.name + "  " + (.spec.template.spec | @base64)'))
-  apps_kustomize+=($(yq -o yaml < "${file}" | jq -r '. | select(.kind == "Application" and (.spec.source | has("helm") | not )) | .metadata.name + "  " + (.spec | @base64)'))
+  apps_kustomize=($(yq -o json < "${file}" | jq -r '. | select(.kind == "ApplicationSet" and (.spec.template.spec.source | has("helm") | not)) | .spec.template.metadata.name + "  " + (.spec.template.spec | @base64)'))
+  apps_kustomize+=($(yq -o json < "${file}" | jq -r '. | select(.kind == "Application" and (.spec.source | has("helm") | not )) | .metadata.name + "  " + (.spec | @base64)'))
 
   IFS=$SAVEIFS
   local old_prefix=$prefix
