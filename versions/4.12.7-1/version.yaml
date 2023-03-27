@@ -5,4 +5,4 @@ version:
     revision: 62e973877cf50069f9e9f489fd55d8eab375e55b
   openshift_gitops:
     channel: 1.7
-    revision: f68b3aa94eccf6130bc0376d0d922c823aa46fab
+    revision: 62e973877cf50069f9e9f489fd55d8eab375e55b
