@@ -2,7 +2,7 @@ version:
   ocp: 4.12.7
   ocp_major: 4.12
   apps_of_apps:
-    revision: 62e973877cf50069f9e9f489fd55d8eab375e55b
+    revision: 7ef133109f8dfa68efcf7e5d24361c5985aa3cc3
   openshift_gitops:
     channel: 1.7
-    revision: 62e973877cf50069f9e9f489fd55d8eab375e55b
+    revision: 7ef133109f8dfa68efcf7e5d24361c5985aa3cc3
